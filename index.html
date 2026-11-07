@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ocevia | Bangladesh Travel Weather</title>
+<script>try{document.documentElement.dataset.theme=localStorage.getItem("ocevia_th")||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light")}catch(e){document.documentElement.dataset.theme="light"}</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eaf4f3;--card:#fff;--txt:#06283d;--line:#cfe0de;--sea:#0e7c86;--sun:#f2b84b;--bad:#d1432f;--vio:#6a4fd8;--tagok:#dff3e8;--dtbg:#ffffffe6;--g:linear-gradient(135deg,#0e7c86,#6a4fd8)}
+[data-theme=dark]{--bg:#07131c;--card:#0f2230;--txt:#e6f3f2;--line:#1f3a4b;--tagok:#12392f;--dtbg:#0f2230e6;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.5 Sora,system-ui,sans-serif;color:var(--txt);background:var(--bg);display:grid;grid-template-columns:460px 1fr;height:100vh;transition:background .4s,color .4s}
+aside{overflow:auto;padding:0 16px 24px;border-right:1px solid var(--line);background:radial-gradient(600px 300px at 0 0,#0e7c8628,transparent),radial-gradient(500px 300px at 100% 45%,#6a4fd822,transparent),var(--bg)}
+main{position:relative;min-height:0}#map{height:100%;background:#cfe8ef}
+header{display:flex;align-items:center;gap:10px;padding:12px 0 14px;position:sticky;top:0;background:var(--bg);z-index:5}
+header::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;border-radius:2px;background:linear-gradient(90deg,#0e7c86,#6a4fd8,#e8508a,#f2b84b,#0e7c86);background-size:300% 100%;animation:shine 5s linear infinite}
+header small{display:block;font-size:12px;opacity:.7}
+#th{width:42px;margin-left:auto;padding:6px;font-size:18px;background:var(--card);border:1px solid var(--line);box-shadow:none}
+.wm{font-size:28px;font-weight:700;background:linear-gradient(90deg,#0e7c86,#6a4fd8,#e8508a,#f2b84b,#0e7c86);background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shine 6s linear infinite}
+.w1{animation:wave 3s linear infinite}.w2{animation:wave 2s linear infinite reverse}
+@keyframes wave{to{transform:translateX(48px)}}
+.sunl{animation:bob 3s ease-in-out infinite alternate}@keyframes bob{to{transform:translateY(-3px)}}
+@keyframes shine{to{background-position:300% 0}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin:10px 0;transition:transform .2s,box-shadow .2s,background .4s}
+.card:hover{transform:translateY(-2px);box-shadow:0 6px 18px #0e7c8630}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+label{font-size:12.5px;display:block}
+input,select{width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--txt);font:inherit}
+button{width:100%;padding:8px;border:0;border-radius:8px;background:var(--g);color:#fff;font:inherit;font-weight:600;cursor:pointer;transition:transform .15s,box-shadow .15s,filter .15s}
+button:hover{transform:translateY(-2px);box-shadow:0 5px 14px #6a4fd855;filter:brightness(1.08)}
+button:active{transform:scale(.97)}
+:is(button,input,select,summary):focus-visible{outline:3px solid var(--sun)}
+button.ai{margin:6px 0;padding:11px;background:linear-gradient(90deg,#0e7c86,#6a4fd8,#e8508a,#6a4fd8,#0e7c86);background-size:300% 100%;animation:shine 4s linear infinite}
+.hint{font-size:12px;opacity:.7;margin:6px 0 0}
+h3{margin:18px 0 0;font-size:16px;display:flex;align-items:center;gap:8px}
+h3::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--g);animation:pulse 2s infinite}
+.big{display:flex;gap:12px;align-items:center}.ico{font-size:54px;animation:bob 2s ease-in-out infinite alternate}
+.t{font-size:40px;font-weight:700;line-height:1}
+.r3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0;text-align:center;font-size:12.5px}.r3 b{font-size:20px}
+.cmp{display:flex;gap:12px;align-items:center}
+.ring{animation:pulse 2.4s ease-out infinite;transform-origin:center}@keyframes pulse{50%{opacity:.35}}
+.tags span{display:inline-block;font-size:12px;padding:2px 9px;border-radius:12px;margin:3px 4px 0 0;background:var(--tagok)}
+.tags .l1{background:var(--sun);color:#06283d}.tags .l2{background:var(--bad);color:#fff;animation:pulse 1.4s infinite}
+.top{display:flex;justify-content:space-between;align-items:center}
+.sc{color:#fff;font-weight:700;border-radius:20px;padding:1px 11px}
+.bar{height:7px;background:var(--line);border-radius:4px;margin:7px 0}
+.bar i{display:block;height:100%;width:0;border-radius:4px;transition:width 1.1s cubic-bezier(.2,.8,.2,1)}
+.meta{font-size:13px}.btns{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+.strip{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px}
+.hc{min-width:50px;text-align:center;font-size:12px;display:flex;flex-direction:column;align-items:center;gap:2px}
+.hc i{display:block;width:10px;background:linear-gradient(#60a5fa,#2563eb);border-radius:3px;transform-origin:bottom;animation:grow .9s both}
+@keyframes grow{from{transform:scaleY(0)}}
+.dy{display:grid;grid-template-columns:50px 34px 1fr 1fr;gap:6px;align-items:center;padding:4px 0;border-bottom:1px solid var(--line);font-size:13px}
+table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:3px;text-align:center;border-bottom:1px solid var(--line)}th:first-child,td:first-child{text-align:left}
+#aio{white-space:pre-wrap;font-size:14px;border-left:4px solid var(--vio)}
+#lyr{position:absolute;top:12px;right:12px;z-index:600;background:var(--dtbg);color:var(--txt);padding:8px 12px;border-radius:10px;font-size:13px;box-shadow:0 2px 10px #0004}
+#lyr label{display:flex;gap:6px;align-items:center;font-size:13px}#lyr input{width:auto}
+.lg{height:7px;border-radius:4px;margin-top:6px;background:linear-gradient(90deg,hsl(200,90%,35%),hsl(125,90%,35%),hsl(50,90%,35%))}
+#toast{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);background:var(--txt);color:var(--bg);padding:8px 14px;border-radius:8px;z-index:700;opacity:0;transition:opacity .3s;pointer-events:none}
+.pin{width:36px;height:36px;border-radius:50%;color:#fff;font-weight:700;display:grid;place-items:center;border:3px solid #fff;box-shadow:0 1px 6px #0006}
+.me{width:22px;height:22px;border-radius:50%;background:var(--sun);border:3px solid #06283d;animation:ping 1.6s infinite}
+@keyframes ping{0%{box-shadow:0 0 0 0 #f2b84baa}100%{box-shadow:0 0 0 18px #f2b84b00}}
+.sr button{margin-top:5px;text-align:left;background:var(--card);color:var(--txt);border:1px solid var(--line);font-weight:400;box-shadow:none}
+.dt{display:inline-block;transform:translate(-50%,-50%);font:600 11px Sora,system-ui,sans-serif;color:var(--txt);background:var(--dtbg);border:2px solid var(--line);border-radius:9px;padding:0 5px;white-space:nowrap}
+.rise{animation:rise .55s both}@keyframes rise{from{opacity:0;transform:translateY(14px)}}
+.skel{background:linear-gradient(90deg,var(--card) 30%,var(--line) 50%,var(--card) 70%);background-size:200% 100%;animation:sk 1.4s linear infinite}@keyframes sk{to{background-position:-200% 0}}
+.nowc{position:relative;overflow:hidden}.nowc>*{position:relative;z-index:1}
+.nowc.clear{background:linear-gradient(135deg,#ffe9a8,#ffc371 60%,#ff9f6b)}
+.nowc.cloud{background:linear-gradient(135deg,#dbe9f4,#b7cde0)}
+.nowc.rain{background:linear-gradient(160deg,#8fb0d0,#57799c);color:#fff}
+.nowc.storm{background:linear-gradient(160deg,#6b6f9e,#2e2f55);color:#fff}
+[data-theme=dark] .nowc.clear{background:linear-gradient(135deg,#5a4217,#7a4a1c 60%,#4b2a3d)}
+[data-theme=dark] .nowc.cloud{background:linear-gradient(135deg,#26384b,#1b2a3a)}
+[data-theme=dark] .nowc.rain{background:linear-gradient(160deg,#21384e,#12202e)}
+[data-theme=dark] .nowc.storm{background:linear-gradient(160deg,#35365f,#15162e)}
+.nowc.rain::before,.nowc.storm::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(105deg,transparent 0 12px,#ffffff50 12px 13px);background-size:40px 40px;animation:drops .5s linear infinite}
+@keyframes drops{to{background-position:-12px 40px}}
+.nowc.storm::after{content:"";position:absolute;inset:0;background:#fff;opacity:0;animation:flash 5s infinite}
+@keyframes flash{0%,92%,96%,100%{opacity:0}93%,97%{opacity:.45}}
+.nowc.clear::before{content:"";position:absolute;right:-40px;top:-40px;width:170px;height:170px;border-radius:50%;background:radial-gradient(#fff9,#fff0 70%);animation:glow 4s ease-in-out infinite alternate}
+@keyframes glow{to{transform:scale(1.3)}}
+.nowc.cloud::before{content:"";position:absolute;top:10px;left:-140px;width:120px;height:36px;border-radius:30px;background:#ffffff80;box-shadow:40px -14px 0 8px #ffffff70,80px 4px 0 2px #ffffff60;animation:drift 18s linear infinite}
+@keyframes drift{to{transform:translateX(620px)}}
+[data-theme=dark] .leaflet-tooltip{background:var(--card);color:var(--txt);border-color:var(--line)}
+[data-theme=dark] .leaflet-bar a{background:var(--card);color:var(--txt);border-color:var(--line)}
+@media(max-width:850px){body{grid-template-columns:1fr;height:auto}main{order:-1;height:55vh}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style></head><body>
+<aside>
+<header>
+<svg width="48" height="48" viewBox="0 0 48 48"><circle cx="24" cy="24" r="22" fill="#06283d" stroke="#14b8a6" stroke-width="2"/><clipPath id="c"><circle cx="24" cy="24" r="20"/></clipPath><circle class="sunl" cx="33" cy="14" r="5" fill="#f2b84b"/><g clip-path="url(#c)"><path class="w1" d="M-48 27q12-8 24 0t24 0 24 0 24 0v30h-96z" fill="#0e7c86"/><path class="w2" d="M-48 33q12-8 24 0t24 0 24 0 24 0v30h-96z" fill="#5fc4c0" opacity=".9"/></g></svg>
+<div><span class="wm">Ocevia</span><small>Bangladesh travel weather and safety</small></div><button id="th" aria-label="Toggle dark mode">🌙</button></header>
+<div class="card" style="font-size:12.5px"><div id="dg1">Checking connection...</div><div id="dg2"></div></div>
+<div class="card">
+<input id="q" placeholder="Search an upazila, town or place" aria-label="Search place">
+<div class="row" style="margin-top:8px"><button id="sb">Search</button><button id="loc">Use my location</button></div>
+<div class="sr" id="sr"></div>
+<div class="row" style="margin-top:8px"><select id="dist" aria-label="District"><option value="">District (64)</option></select><select id="upz" aria-label="Upazila"><option value="">Upazila</option></select></div>
+<button id="ups" style="margin-top:6px">Show this district's upazilas with live temperature</button>
+<p class="hint">Or tap anywhere on the map to rank the best places around that point.</p></div>
+<div class="card"><div class="row">
+<label>What do you want to do?<select id="act"><option value="swim">Swimming</option><option value="sun">Sunbathing</option><option value="walk">Beach walk</option><option value="photo">Photography</option><option value="boat">Boating</option><option value="hike">Hiking</option><option value="picnic">Family picnic</option></select></label>
+<label>Forecast window<select id="win"><option value="24">Next 24 hours</option><option value="48">Next 48 hours</option><option value="72" selected>Next 72 hours</option></select></label></div>
+<label style="margin-top:8px">Places to compare<select id="area"><option value="near">Nearest 10 spots</option><option value="all">All Bangladesh spots</option></select></label></div>
+<div id="selname" style="font-weight:600"></div>
+<div class="card" id="now">Loading live weather...</div>
+<button class="ai" id="ai">Ask Ocevia AI: why this place, and what are the risks?</button>
+<div class="card" id="aio" hidden></div>
+<details class="card"><summary>AI settings (free Gemini key)</summary>
+<p class="hint">Get a free key at aistudio.google.com/apikey. It stays in this browser only. Without a key, Ocevia gives a built-in explanation.</p>
+<input id="key" type="password" placeholder="Paste Gemini API key" autocomplete="off"><button id="ks" style="margin-top:6px">Save key</button></details>
+<div class="card"><b>TourMate</b><p class="hint" style="margin:4px 0 0">Cloud deployment: open the separate TourMate service URL provided after Render deploy. For offline nearby chat on one hotspot, run the included tourmate-server.js locally instead.</p><label style="margin-top:8px">TourMate service URL<input id="tmurl" type="url" placeholder="https://your-tourmate-service.onrender.com"></label><button id="tmopen" style="margin-top:6px">Open TourMate</button></div>
+<h3>Best places for you</h3><div id="rank"></div>
+<h3>Hourly forecast</h3><div class="card"><div id="hr" class="strip"></div></div>
+<h3>3-day forecast</h3><div class="card" id="dy"></div>
+<h3>Model comparison</h3><div class="card" id="md">Loading...</div>
+<p class="hint">Hazard scans use forecast rules on live model data. Storm surge cannot be measured here, so always check Bangladesh Meteorological Department (BMD) warning signals before going to sea.<br>Data: Open-Meteo, RainViewer, OpenStreetMap, CARTO and bangladesh-geojson.</p>
+</aside>
+<main><div id="map"></div>
+<div id="lyr"><label><input type="checkbox" id="lw" checked>Live wind flow</label><label><input type="checkbox" id="lr" checked>Rain radar</label><label><input type="checkbox" id="ld" checked>District live temps</label><div class="lg"></div><small>calm to strong</small></div>
+<div id="toast"></div></main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const DIST="Dhaka,23.81,90.41;Gazipur,24.00,90.42;Manikganj,23.86,90.00;Munshiganj,23.55,90.53;Narayanganj,23.62,90.50;Narsingdi,23.92,90.72;Faridpur,23.60,89.84;Gopalganj,23.01,89.83;Madaripur,23.17,90.20;Rajbari,23.76,89.64;Shariatpur,23.24,90.43;Tangail,24.25,89.92;Kishoreganj,24.43,90.78;Netrokona,24.87,90.73;Mymensingh,24.75,90.41;Jamalpur,24.92,89.94;Sherpur,25.02,90.02;Bagerhat,22.65,89.79;Chuadanga,23.64,88.84;Jessore,23.17,89.21;Jhenaidah,23.54,89.17;Khulna,22.82,89.55;Kushtia,23.90,89.12;Magura,23.49,89.42;Meherpur,23.76,88.63;Narail,23.17,89.50;Satkhira,22.72,89.07;Bogra,24.85,89.37;Joypurhat,25.10,89.02;Naogaon,24.80,88.95;Natore,24.41,89.00;Chapainawabganj,24.60,88.28;Pabna,24.00,89.25;Rajshahi,24.37,88.60;Sirajganj,24.45,89.70;Dinajpur,25.63,88.64;Gaibandha,25.33,89.53;Kurigram,25.81,89.65;Lalmonirhat,25.99,89.45;Nilphamari,25.93,88.86;Panchagarh,26.34,88.55;Rangpur,25.75,89.25;Thakurgaon,26.03,88.46;Barguna,22.15,90.12;Barisal,22.70,90.37;Bhola,22.69,90.65;Jhalokati,22.64,90.20;Patuakhali,22.36,90.33;Pirojpur,22.58,89.97;Bandarban,22.20,92.22;Brahmanbaria,23.96,91.11;Chandpur,23.23,90.65;Chittagong,22.34,91.83;Comilla,23.46,91.18;Cox's Bazar,21.45,91.97;Feni,23.02,91.40;Khagrachhari,23.12,91.98;Lakshmipur,22.94,90.84;Noakhali,22.82,91.10;Rangamati,22.65,92.17;Habiganj,24.38,91.42;Moulvibazar,24.48,91.77;Sunamganj,25.07,91.40;Sylhet,24.90,91.87";
+const SP="Cox's Bazar Beach,21.4272,92.0058,c;Inani Beach,21.23,92.02,c;Teknaf Beach,20.863,92.303,c;Saint Martin's Island,20.6275,92.323,c;Kuakata Beach,21.8147,90.1206,c;Patenga Beach,22.237,91.7926,c;Nijhum Dwip,22.067,91.053,c;Sundarbans (Karamjal),22.43,89.6,f;Sajek Valley,23.38,92.29,h;Nilgiri Hills,22.03,92.37,h;Rangamati Lake,22.65,92.17,w;Kaptai Lake,22.49,92.22,w;Srimangal Tea Gardens,24.31,91.73,f;Jaflong,25.17,92.02,w;Ratargul Swamp Forest,25.01,91.93,f;Tanguar Haor,25.13,91.08,w;Sonargaon,23.65,90.6,x;Lalbagh Fort (Dhaka),23.719,90.388,x;Paharpur Buddhist Vihara,25.031,88.978,x";
+const prs=s=>s.split(';').map(x=>{const a=x.split(',');return{n:a[0],lat:+a[1],lng:+a[2],t:a[3]||'x',c:a[3]==='c'}});
+const DS=prs(DIST),SPOTS=prs(SP);
+const ICON={c:'🏖️',h:'⛰️',w:'🏞️',f:'🌿',x:'🏛️'};
+const MODELS={ecmwf_ifs025:'ECMWF',gfs_seamless:'GFS',icon_seamless:'ICON'};
+const HV='temperature_2m,apparent_temperature,relative_humidity_2m,precipitation,wind_speed_10m,wind_gusts_10m,wind_direction_10m,cloud_cover,weather_code,surface_pressure';
+const j=async u=>{const r=await fetch(u);if(!r.ok){let t='';try{t=(await r.json()).reason}catch(e){}throw new Error(t||r.status)}return r.json()};
+const avg=a=>{a=a.filter(x=>x!=null);return a.length?a.reduce((s,x)=>s+x,0)/a.length:null};
+const sum=a=>a.reduce((s,x)=>s+(x||0),0),mx=a=>Math.max(0,...a.filter(x=>x!=null));
+const cl=v=>Math.max(0,Math.min(100,v));
+const esc=s=>String(s).replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';');
+const tc=t=>`hsl(${Math.max(0,Math.min(220,(37-t)*14))},80%,45%)`;
+const card=d=>['N','NE','E','SE','S','SW','W','NW'][Math.round(d/45)%8];
+const wx=c=>c===0?['☀️','Clear']:c<3?['⛅','Partly cloudy']:c===3?['☁️','Overcast']:c<50?['🌫️','Fog']:c<60?['🌦️','Drizzle']:c<70?['🌧️','Rain']:c<80?['🌨️','Snow']:c<90?['🌦️','Showers']:['⛈️','Thunderstorm'];
+const col=v=>v>=70?'#2e9e6b':v>=45?'#e0a526':'#d1432f';
+const hv=(a,b,c,d)=>{const r=Math.PI/180,x=Math.sin((c-a)*r/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin((d-b)*r/2)**2;return 12742*Math.asin(Math.sqrt(x))};
+const nearCoast=(la,ln)=>SPOTS.some(s=>s.c&&hv(la,ln,s.lat,s.lng)<60);
+const idx=d=>Math.max(0,d.hourly.time.findIndex(x=>x>=d.current.time));
+function toast(t){const e=$('toast');e.textContent=t;e.style.opacity=1;clearTimeout(e._t);e._t=setTimeout(()=>e.style.opacity=0,3500)}
+function cnt(id,v,dec=0){const e=$(id),t0=performance.now();(function f(t){const k=Math.min(1,(t-t0)/900);e.textContent=(v*k).toFixed(dec);if(k<1)requestAnimationFrame(f)})(t0)}
+
+/* ---------- map, wind particles, radar ---------- */
+if(typeof L==='undefined'){const s=new Proxy(function(){},{get:(t,k)=>k===Symbol.toPrimitive?()=>0:s,apply:()=>s,construct:()=>s});window.L=s;window.NOMAP=true}
+const map=L.map('map',{minZoom:7,maxBounds:[[20.3,87.8],[26.9,92.9]],maxBoundsViscosity:1}).setView([23.7,90.3],7);
+let WL=35;
+const tileUrl=t=>`https://{s}.basemaps.cartocdn.com/${t==='dark'?'dark_all':'light_all'}/{z}/{x}/{y}{r}.png`;
+const tile=L.tileLayer(tileUrl(document.documentElement.dataset.theme),{subdomains:'abcd',attribution:'© OpenStreetMap © CARTO'}).addTo(map);
+function setTheme(t,save){document.documentElement.dataset.theme=t;WL=t==='dark'?64:35;$('th').textContent=t==='dark'?'☀️':'🌙';tile.setUrl(tileUrl(t));if(save)try{localStorage.setItem('ocevia_th',t)}catch(e){}}
+$('th').onclick=()=>setTheme(document.documentElement.dataset.theme==='dark'?'light':'dark',true);
+setTheme(document.documentElement.dataset.theme||'light');
+const ml=L.layerGroup().addTo(map),rl=L.layerGroup().addTo(map);
+const cv=document.createElement('canvas');cv.style.cssText='position:absolute;inset:0;pointer-events:none;z-index:450';map.getContainer().appendChild(cv);
+const cx=cv.getContext('2d');
+const fit=()=>{const s=map.getSize();cv.width=s.x;cv.height=s.y};fit();
+map.on('resize',fit);map.on('movestart zoomstart',()=>cx.clearRect(0,0,cv.width,cv.height));
+let G=null;
+async function loadWind(){
+ const la=[],lo=[];for(let i=0;i<7;i++)for(let k=0;k<7;k++){la.push(20.5+i);lo.push(+(88+k*.8).toFixed(1))}
+ const r=await j(`https://api.open-meteo.com/v1/forecast?latitude=${la}&longitude=${lo}&current=wind_speed_10m,wind_direction_10m&wind_speed_unit=kmh`);
+ G=[].concat(r).map(o=>{const s=o.current.wind_speed_10m,d=o.current.wind_direction_10m*Math.PI/180;return{u:-s*Math.sin(d),v:-s*Math.cos(d)}});
+}
+function wind(la,ln){
+ const y=la-20.5,x=(ln-88)/.8,i=Math.min(5,Math.max(0,Math.floor(y))),k=Math.min(5,Math.max(0,Math.floor(x)));
+ const fy=Math.min(1,Math.max(0,y-i)),fx=Math.min(1,Math.max(0,x-k)),g=(a,b)=>G[(i+a)*7+k+b];
+ const m=f=>(1-fy)*((1-fx)*f(g(0,0))+fx*f(g(0,1)))+fy*((1-fx)*f(g(1,0))+fx*f(g(1,1)));
+ return[m(p=>p.u),m(p=>p.v)];
+}
+const PT=Array.from({length:1500},()=>({}));
+const spawn=p=>{p.lat=20.5+Math.random()*6.2;p.lng=88+Math.random()*4.9;p.age=20+Math.random()*90};
+PT.forEach(spawn);
+function frame(){
+ if(G&&$('lw').checked){
+  cx.globalCompositeOperation='destination-out';cx.fillStyle='rgba(0,0,0,.07)';cx.fillRect(0,0,cv.width,cv.height);cx.globalCompositeOperation='source-over';cx.lineWidth=1.4;
+  for(const p of PT){
+   const[u,v]=wind(p.lat,p.lng),sp=Math.hypot(u,v),a=map.latLngToContainerPoint([p.lat,p.lng]);
+   p.lat+=v*.0006;p.lng+=u*.0006/Math.cos(p.lat*Math.PI/180);
+   const b=map.latLngToContainerPoint([p.lat,p.lng]);
+   cx.strokeStyle=`hsl(${200-Math.min(sp,50)*3},90%,${WL}%)`;cx.beginPath();cx.moveTo(a.x,a.y);cx.lineTo(b.x,b.y);cx.stroke();
+   if(--p.age<0||p.lat<20.4||p.lat>26.8||p.lng<87.9||p.lng>92.9)spawn(p);
+  }
+ }else if(G)cx.clearRect(0,0,cv.width,cv.height);
+ requestAnimationFrame(frame);
+}
+(async()=>{try{
+ const d=await j('https://api.rainviewer.com/public/weather-maps.json'),fr=[...d.radar.past,...(d.radar.nowcast||[])];
+ const ls=fr.map(f=>L.tileLayer(d.host+f.path+'/256/{z}/{x}/{y}/2/1_1.png',{opacity:0,maxNativeZoom:7}).addTo(rl));let i=0;
+ setInterval(()=>{ls.forEach((l,k)=>l.setOpacity(k===i&&$('lr').checked?.55:0));i=(i+1)%ls.length},650);
+}catch(e){}})();
+
+/* ---------- data ---------- */
+async function fetchPts(pts){
+ const la=pts.map(p=>p.lat),lo=pts.map(p=>p.lng);
+ const fu=`https://api.open-meteo.com/v1/forecast?latitude=${la}&longitude=${lo}&current=${HV}&hourly=${HV}&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max&forecast_days=4&timezone=Asia%2FDhaka&wind_speed_unit=kmh`;
+ const ci=pts.map((p,i)=>p.c?i:-1).filter(i=>i>=0);
+ const mu=ci.length?`https://marine-api.open-meteo.com/v1/marine?latitude=${ci.map(i=>la[i])}&longitude=${ci.map(i=>lo[i])}&hourly=wave_height&forecast_days=4&timezone=Asia%2FDhaka`:null;
+ const[w,m]=await Promise.all([j(fu),mu?j(mu).catch(()=>null):null]);
+ const M=m?[].concat(m):[];
+ return[].concat(w).map((d,i)=>{const k=ci.indexOf(i);d.p=pts[i];d.wave=k>=0&&M[k]&&M[k].hourly?M[k].hourly.wave_height:null;return d});
+}
+const ACT={
+ swim:m=>m.c?100-m.wave*28-Math.max(0,m.gust-20)*1.2-m.rain*1.2:25,
+ sun:m=>100-m.cloud*.5-m.rain*2.5-Math.max(0,m.wind-25)-Math.max(0,24-m.app)*4-Math.max(0,m.app-36)*5,
+ walk:m=>100-m.rain*1.8-Math.max(0,m.wind-30)-Math.max(0,m.app-34)*4,
+ photo:m=>100-Math.abs(m.cloud-45)*.7-m.rain*2-Math.max(0,m.gust-35),
+ boat:m=>100-m.wave*30-Math.max(0,m.gust-18)*2-m.rain*1.5,
+ hike:m=>100-m.rain*2-Math.max(0,m.app-30)*4-Math.max(0,m.gust-35)+(m.hill?8:0),
+ picnic:m=>100-m.rain*2.2-Math.max(0,m.wind-25)*1.2-Math.max(0,m.app-33)*4
+};
+function an(d,H,act){
+ const p=d.p,h=d.hourly,st=idx(d),g=n=>(h[n]||[]).slice(st,st+H);
+ const rain=sum(g('precipitation')),gust=mx(g('wind_gusts_10m')),wind=avg(g('wind_speed_10m'))||0,cloud=avg(g('cloud_cover'))||0,app=avg(g('apparent_temperature'))||0;
+ const thunder=g('weather_code').some(c=>c>=95),pmin=Math.min(1013,...g('surface_pressure').filter(x=>x!=null));
+ let wave=0,est=false;
+ if(p.c){wave=d.wave?mx(d.wave.slice(st,st+H)):0;if(!wave){wave=+(gust*.025).toFixed(1);est=true}}
+ const hz=[],add=(k,l)=>hz.push({k,l});
+ if(thunder)add('Thunderstorm and lightning',2);
+ if(gust>=60)add('Damaging wind',2);else if(gust>=40)add('Strong wind',1);
+ if(wave>=2.5)add('High waves',2);else if(wave>=1.5)add('Rough sea',1);
+ if(p.c&&((pmin<1000&&gust>=50)||wave>=3.5))add('Storm-surge risk, check BMD',2);
+ if(rain>=80)add('Flood-level rain',2);else if(rain>=40)add('Heavy rain',1);
+ if(app>=40)add('Extreme heat',2);else if(app>=36)add('Heat stress',1);
+ const m={wave,gust,rain,cloud,app,wind,c:p.c,hill:p.t==='h'};
+ const score=cl(ACT[act](m)-(thunder?35:0));
+ return{p,d,m,hz,est,score,temp:d.current.temperature_2m,feels:d.current.apparent_temperature};
+}
+
+/* ---------- state and render ---------- */
+let AGREE='unknown',sel=null,LAST=null,R=[],A0=null,MD=null,me=null,mk=null,routeLine=null;
+function pick(la,ln,n,fly){
+ sel={lat:la,lng:ln,n};
+ if(mk)map.removeLayer(mk);
+ mk=L.marker([la,ln],{icon:L.divIcon({className:'',html:'<div class="me"></div>',iconSize:[22,22]})}).addTo(map);
+ if(fly)map.flyTo([la,ln],9,{duration:1.2});
+ $('selname').textContent='📍 '+n;
+ refresh();
+}
+const pickIdx=i=>pick(R[i].p.lat,R[i].p.lng,R[i].p.n,true);
+async function refresh(){
+ const near=SPOTS.map(s=>({...s,dist:hv(sel.lat,sel.lng,s.lat,s.lng)})).sort((a,b)=>a.dist-b.dist).slice(0,$('area').value==='all'?SPOTS.length:10);
+ const pts=[{n:sel.n,lat:sel.lat,lng:sel.lng,t:'x',c:nearCoast(sel.lat,sel.lng),dist:0},...near];
+ $('now').className='card skel';$('now').textContent='Loading live weather...';
+ try{LAST=await fetchPts(pts);render()}
+ catch(e){
+  try{LAST=await fetchPts([pts[0]]);render();toast('Loaded the selected point only')}
+  catch(e2){LAST=null;A0=null;R=[];$('rank').innerHTML='';$('now').className='card';$('now').innerHTML='Live data could not load: '+esc(e2 instanceof TypeError?'the browser blocked the internet request':e2.message)+'. See the connection check at the top.<br><button onclick="refresh()" style="margin-top:6px">Retry</button>'}
+ }
+ loadModels();
+}
+function render(){
+ if(!LAST)return;
+ const H=+$('win').value,act=$('act').value,all=LAST.map(d=>an(d,H,act));
+ A0=all[0];
+ R=all.slice(1).map(r=>{const s=r.hz.filter(h=>h.l===2).length;r.f=cl(r.score-s*20-(r.hz.length-s)*8-Math.min(15,r.p.dist*.03));return r}).sort((a,b)=>b.f-a.f);
+ const c=A0.d.current,w=wx(c.weather_code),k0=c.weather_code;
+ $('now').className='card nowc '+(k0>=95?'storm':(k0>=80||(k0>=51&&k0<70))?'rain':k0===0?'clear':'cloud');
+ $('now').innerHTML=`<div class="big"><span class="ico">${w[0]}</span><div><div class="t"><span id="n1">0</span>°C</div><div>${w[1]}, feels like <b id="n2">0</b>°C</div></div></div>
+ <div class="r3"><div>💧 Humidity<br><b id="n3">0</b>%</div><div>💨 Wind<br><b id="n4">0</b> km/h</div><div>🧭 Pressure<br><b id="n5">0</b> hPa</div></div>
+ <div class="cmp"><svg viewBox="-50 -50 100 100" width="86"><circle class="ring" r="46" fill="none" stroke="#0e7c86" stroke-width="3"/><text y="-36" font-size="11" text-anchor="middle" fill="currentColor">N</text><g id="arw" style="transition:transform 1.8s cubic-bezier(.3,1.5,.5,1);transform:rotate(0deg)"><path d="M0-28L9 14 0 6-9 14z" fill="#0e7c86"/></g></svg>
+ <div>Wind from <b>${card(c.wind_direction_10m)}</b> (${Math.round(c.wind_direction_10m)}°)<br>Gusts up to <b>${Math.round(c.wind_gusts_10m)}</b> km/h<br>Rain now: ${c.precipitation} mm</div></div>
+ <div class="tags">${A0.hz.length?A0.hz.map(h=>`<span class="l${h.l}">${h.k}</span>`).join(''):'<span>No major hazards in this window</span>'}</div>`;
+ cnt('n1',c.temperature_2m,1);cnt('n2',c.apparent_temperature,1);cnt('n3',c.relative_humidity_2m);cnt('n4',c.wind_speed_10m);cnt('n5',c.surface_pressure);
+ setTimeout(()=>{const a=$('arw');if(a)a.style.transform=`rotate(${c.wind_direction_10m+180}deg)`},60);
+ $('rank').innerHTML=R.map((r,i)=>`<div class="card rise" style="animation-delay:${i*70}ms;border-left:5px solid ${col(r.f)}"><div class="top"><b>${i+1}. ${ICON[r.p.t]} ${esc(r.p.n)}</b><span class="sc" style="background:${col(r.f)}">${Math.round(r.f)}</span></div>
+ <div class="bar"><i data-w="${r.f}" style="background:${col(r.f)}"></i></div>
+ <div class="meta">${Math.round(r.temp)}°C (feels ${Math.round(r.feels)}°), rain ${r.m.rain.toFixed(0)} mm, gusts ${Math.round(r.m.gust)} km/h${r.p.c?`, waves ${r.m.wave.toFixed(1)} m${r.est?'*':''}`:''}, ${Math.round(r.p.dist)} km from selected point</div>
+ <div class="tags">${r.hz.length?r.hz.map(h=>`<span class="l${h.l}">${h.k}</span>`).join(''):'<span>No major hazards</span>'}</div>
+ <div class="btns"><button onclick="pickIdx(${i})">View weather</button><button onclick="route(${i})">Route from me</button></div><div class="hint" id="rt${i}"></div></div>`).join('')+'<p class="hint">* wave height estimated from wind where marine data is missing</p>';
+ setTimeout(()=>document.querySelectorAll('.bar i').forEach(e=>e.style.width=e.dataset.w+'%'),40);
+ ml.clearLayers();
+ R.forEach((r,i)=>L.marker([r.p.lat,r.p.lng],{icon:L.divIcon({className:'',html:`<div class="pin" style="background:${col(r.f)}">${Math.round(r.f)}</div>`,iconSize:[36,36]}),zIndexOffset:1000-i}).on('click',()=>pickIdx(i)).bindTooltip(r.p.n).addTo(ml));
+ const hs=A0.d.hourly,st=idx(A0.d);let hh='';
+ for(let i=0;i<24;i++){const k=st+i;if(!hs.time[k])break;const pr=hs.precipitation[k]||0;hh+=`<div class="hc"><small>${hs.time[k].slice(11,16)}</small><span>${wx(hs.weather_code[k])[0]}</span><b style="color:${tc(hs.temperature_2m[k])}">${Math.round(hs.temperature_2m[k])}°</b><i style="height:${Math.min(40,pr*14)+2}px"></i><small>${pr.toFixed(1)}</small></div>`}
+ $('hr').innerHTML=hh;
+ const dl=A0.d.daily;
+ $('dy').innerHTML=[0,1,2].map(i=>`<div class="dy"><b>${new Date(dl.time[i]+'T00:00').toLocaleDateString('en',{weekday:'short'})}</b><span style="font-size:22px">${wx(dl.weather_code[i])[0]}</span><span>${Math.round(dl.temperature_2m_min[i])}° to ${Math.round(dl.temperature_2m_max[i])}°C</span><span>🌧 ${dl.precipitation_sum[i].toFixed(1)} mm, 💨 ${Math.round(dl.wind_speed_10m_max[i])} km/h</span></div>`).join('');
+ renderModels();
+}
+async function loadModels(){
+ const o={};
+ await Promise.all(Object.keys(MODELS).map(async k=>{try{o[k]=await j(`https://api.open-meteo.com/v1/forecast?latitude=${sel.lat}&longitude=${sel.lng}&hourly=temperature_2m,precipitation,wind_speed_10m&models=${k}&forecast_days=4&timezone=Asia%2FDhaka&wind_speed_unit=kmh`)}catch(e){o[k]=null}}));
+ MD=o;renderModels();
+}
+function renderModels(){
+ if(!MD||!LAST)return;
+ const H=+$('win').value,st=idx(LAST[0]),rows=[],rains=[];
+ for(const k in MODELS){
+  const o=MD[k];if(!o){rows.push(`<tr><td>${MODELS[k]}</td><td colspan="3">unavailable</td></tr>`);continue}
+  const g=n=>(o.hourly[n]||o.hourly[n+'_'+k]||[]).slice(st,st+H),r=sum(g('precipitation'));rains.push(r);
+  rows.push(`<tr><td><b>${MODELS[k]}</b></td><td>${(avg(g('temperature_2m'))||0).toFixed(1)}°C</td><td>${r.toFixed(1)} mm</td><td>${Math.round(mx(g('wind_speed_10m')))} km/h</td></tr>`);
+ }
+ const sp=rains.length>1?Math.max(...rains)-Math.min(...rains):0;AGREE=rains.length<2?'unknown':sp<5?'High':sp<15?'Medium':'Low';
+ $('md').innerHTML=`<table><tr><th>Model</th><th>Avg temp</th><th>Rain total</th><th>Max wind</th></tr>${rows.join('')}</table><p class="hint">Model agreement on rain: <b>${AGREE}</b> for the next ${H} hours</p>`;
+}
+
+/* ---------- route from my location ---------- */
+const locate=()=>new Promise(res=>{
+ if(!navigator.geolocation){toast('Location is not supported in this browser');return res(null)}
+ navigator.geolocation.getCurrentPosition(p=>{me={lat:p.coords.latitude,lng:p.coords.longitude};
+  L.marker([me.lat,me.lng],{icon:L.divIcon({className:'',html:'<div class="me" style="background:#2563eb"></div>',iconSize:[22,22]})}).addTo(map).bindTooltip('You are here');res(me)},
+  ()=>{toast('Location blocked. Allow it in the browser, or open this file over https or localhost.');res(null)},{timeout:10000});
+});
+async function route(i){
+ const r=R[i],el=$('rt'+i);
+ if(!me&&!(await locate()))return;
+ el.textContent='Finding route...';
+ try{
+  const o=await j(`https://router.project-osrm.org/route/v1/driving/${me.lng},${me.lat};${r.p.lng},${r.p.lat}?overview=full&geometries=geojson`),rt=o.routes[0];
+  if(routeLine)map.removeLayer(routeLine);
+  routeLine=L.geoJSON(rt.geometry,{style:{color:'#6a4fd8',weight:5,opacity:.85,dashArray:'2 10',lineCap:'round'}}).addTo(map);
+  map.fitBounds(routeLine.getBounds(),{padding:[40,40]});
+  const mn=Math.round(rt.duration/60);
+  el.textContent=`By road: ${(rt.distance/1000).toFixed(0)} km, about ${Math.floor(mn/60)} h ${mn%60} min (ferries and traffic not included)`;
+ }catch(e){const d=hv(me.lat,me.lng,r.p.lat,r.p.lng);el.textContent=`Routing is unavailable. Straight line ${d.toFixed(0)} km, roughly ${(d*1.3).toFixed(0)} km by road.`}
+}
+
+/* ---------- AI ---------- */
+function local(act){
+ const t=R[0],o=R.slice(1,4);
+ return`Best pick for ${$('act').selectedOptions[0].text.toLowerCase()}: ${t.p.n}.\nIt scores ${Math.round(t.f)}/100 with ${Math.round(t.temp)}°C (feels ${Math.round(t.feels)}°), ${t.m.rain.toFixed(0)} mm of rain and gusts up to ${Math.round(t.m.gust)} km/h in the next ${$('win').value} hours.${t.hz.length?'\nWatch out for: '+t.hz.map(h=>h.k).join(', ')+'.':'\nNo major hazards were found.'}\n\nOther places:\n`+o.map(r=>`- ${r.p.n} (${Math.round(r.f)}/100): ${r.hz.length?r.hz.map(h=>h.k).join(', '):'no major hazards, but conditions are less suited to this activity'}`).join('\n')+'\n\nAlways check BMD warning signals before going near the sea. Add a free Gemini key in AI settings for a richer explanation.';
+}
+async function gem(prompt,key){
+ for(const m of['gemini-2.5-flash','gemini-2.0-flash']){
+  try{const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent`,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})});
+  if(!r.ok)continue;const o=await r.json(),t=((o.candidates||[])[0]?.content?.parts||[]).map(p=>p.text).join('');if(t)return t}catch(e){}
+ }
+ throw new Error('Gemini did not respond. Check the key or update the model name in gem().');
+}
+function type(el,t){let i=0;clearInterval(el._t);el._t=setInterval(()=>{el.textContent=t.slice(0,++i);if(i>=t.length)clearInterval(el._t)},10)}
+$('ai').onclick=async()=>{
+ if(!A0||!R.length){toast('Live data has not loaded, so the AI will not guess. See the connection check.');return}
+ const o=$('aio');o.hidden=false;o.textContent='Ocevia AI is analysing live forecasts...';
+ const key=localStorage.getItem('ocevia_gk'),act=$('act').selectedOptions[0].text,H=$('win').value;
+ if(!key){type(o,local());return}
+ const c0=A0.d.current,selData={place:sel.n,temp_c:c0.temperature_2m,feels_c:c0.apparent_temperature,humidity_pct:c0.relative_humidity_2m,wind_kmh:c0.wind_speed_10m,wind_from_deg:c0.wind_direction_10m,gust_kmh:c0.wind_gusts_10m,pressure_hpa:c0.surface_pressure,rain_now_mm:c0.precipitation,hazards:A0.hz.map(h=>h.k)};
+ const data=R.slice(0,5).map(r=>({place:r.p.n,score:Math.round(r.f),temp_c:Math.round(r.temp),feels_c:Math.round(r.feels),rain_mm:Math.round(r.m.rain),gust_kmh:Math.round(r.m.gust),wave_m:r.p.c?+r.m.wave.toFixed(1):null,hazards:r.hz.map(h=>h.k),km_away:Math.round(r.p.dist)}));
+ const prompt=`You are Ocevia, a friendly travel-weather guide for Bangladesh. The tourist wants to do: ${act}. Forecast window: next ${H} hours. Ranked places (JSON): ${JSON.stringify(data)}. Selected point live data: ${JSON.stringify(selData)}. Model agreement on rain: ${AGREE}. In simple tourist-friendly English, max 200 words: 0) current conditions and hazards at the selected point, 1) why the first place is the best pick, 2) one short risk note for each other place, 3) clear safety advice. Mention checking BMD warning signals if wind, waves or surge hazards appear. Use only the data given and say so if something is missing.`;
+ try{type(o,await gem(prompt,key))}catch(e){type(o,e.message+'\n\n'+local())}
+};
+$('ks').onclick=()=>{const v=$('key').value.trim();if(v){localStorage.setItem('ocevia_gk',v);$('key').value='';toast('Gemini key saved in this browser')}};
+
+/* ---------- districts, upazilas, diagnostics ---------- */
+let DIS=DS,RD=null,RU=[],CUR_D=null,GC={};
+try{GC=JSON.parse(localStorage.getItem('ocevia_gc')||'{}')}catch(e){}
+const ul=L.layerGroup().addTo(map),dlg=L.layerGroup().addTo(map);
+function popDist(){
+ if(RD)DIS=RD.map(x=>({...x,t:'x',c:false}));
+ $('dist').length=1;DIS.forEach((d,i)=>$('dist').add(new Option(d.n,i)));
+}
+async function loadAdmin(){
+ const arr=o=>Array.isArray(o)?o:(o.districts||o.upazilas||o.data||Object.values(o)[0]||[]);
+ for(const base of['https://cdn.jsdelivr.net/npm/bangladesh-geojson/src/data/','https://raw.githubusercontent.com/ifahimreza/bangladesh-geojson/master/src/data/']){
+  try{
+   const[a,b]=await Promise.all([j(base+'bd-districts.json'),j(base+'bd-upazilas.json')]);
+   const d=arr(a).map(x=>({id:String(x.id),n:x.name,lat:+x.lat,lng:+(x.long!=null?x.long:x.lng)})),u=arr(b).map(x=>({id:String(x.id),d:String(x.district_id),name:x.name}));
+   if(d.length>=60&&u.length>=400&&d.every(x=>x.lat&&x.lng)){RD=d;RU=u;return true}
+  }catch(e){}
+ }
+ return false;
+}
+async function resolveUp(u,d){
+ if(GC[u.id])return GC[u.id];
+ let p={lat:d.lat,lng:d.lng,approx:true};
+ if(/sadar|sador/i.test(u.name))p.approx=false;
+ else try{
+  const o=await j(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(u.name.replace(/ upazila$/i,''))}&count=10&countryCode=BD&language=en`);
+  const c=(o.results||[]).map(r=>({lat:r.latitude,lng:r.longitude,k:hv(d.lat,d.lng,r.latitude,r.longitude)})).sort((a,b)=>a.k-b.k)[0];
+  if(c&&c.k<120)p={lat:c.lat,lng:c.lng,approx:false};
+ }catch(e){return p}
+ GC[u.id]=p;try{localStorage.setItem('ocevia_gc',JSON.stringify(GC))}catch(e){}
+ return p;
+}
+const liveMarker=(la,ln,label,fn,color)=>L.marker([la,ln],{icon:L.divIcon({className:'',html:`<div class="dt" style="border-color:${color||'var(--line)'}">${label}</div>`,iconSize:[0,0]}),zIndexOffset:-500}).on('click',fn);
+async function districtLive(){
+ const r=[].concat(await j(`https://api.open-meteo.com/v1/forecast?latitude=${DIS.map(d=>d.lat)}&longitude=${DIS.map(d=>d.lng)}&current=temperature_2m,weather_code&timezone=Asia%2FDhaka`));
+ dlg.clearLayers();
+ r.forEach((o,i)=>liveMarker(DIS[i].lat,DIS[i].lng,wx(o.current.weather_code)[0]+Math.round(o.current.temperature_2m)+'°',()=>{$('dist').value=i;$('dist').onchange({target:$('dist')})},tc(o.current.temperature_2m)).bindTooltip(DIS[i].n).addTo(dlg));
+}
+async function showUp(){
+ if(!CUR_D||!RU.length)return toast(RU.length?'Choose a district first':'Upazila list is not available, use the search box');
+ const us=RU.filter(u=>u.d===CUR_D.id);toast('Locating '+us.length+' upazilas...');
+ try{
+  const pts=await Promise.all(us.map(u=>resolveUp(u,CUR_D)));
+  const r=[].concat(await j(`https://api.open-meteo.com/v1/forecast?latitude=${pts.map(p=>p.lat)}&longitude=${pts.map(p=>p.lng)}&current=temperature_2m,weather_code&timezone=Asia%2FDhaka`));
+  ul.clearLayers();
+  r.forEach((o,i)=>liveMarker(pts[i].lat,pts[i].lng,esc(us[i].name)+' '+wx(o.current.weather_code)[0]+(pts[i].approx?'~':'')+Math.round(o.current.temperature_2m)+'°',()=>pick(pts[i].lat,pts[i].lng,us[i].name+' Upazila, '+CUR_D.n,false),'#6a4fd8').addTo(ul));
+  map.fitBounds(L.latLngBounds(pts.map(p=>[p.lat,p.lng])),{padding:[40,40],maxZoom:10});
+  if(pts.some(p=>p.approx))toast('~ means the exact point was not found, so the district centre is used');
+ }catch(e){toast('Could not load upazila weather: '+e.message)}
+}
+async function diag(){
+ const T=[['Weather','https://api.open-meteo.com/v1/forecast?latitude=23.8&longitude=90.4&current=temperature_2m'],['Marine waves','https://marine-api.open-meteo.com/v1/marine?latitude=21.3&longitude=91.9&hourly=wave_height&forecast_days=1'],['Place search','https://geocoding-api.open-meteo.com/v1/search?name=Savar&count=1&countryCode=BD'],['Rain radar','https://api.rainviewer.com/public/weather-maps.json']];
+ const o=await Promise.all(T.map(async([n,u])=>{try{await j(u);return'OK: '+n}catch(e){return'FAILED: '+n+' ('+(e instanceof TypeError?'blocked by browser or network':e.message)+')'}}));
+ if(window.NOMAP)o.push('FAILED: map library (Leaflet) blocked');
+ const bad=o.some(x=>x[0]==='F');
+ $('dg1').innerHTML=(bad?'<b>Connection check</b><br>':'')+o.map(esc).join('<br>')+(bad?'<br><b>Some requests are blocked. Download this file and open it directly in Chrome, Edge or Firefox with internet on. Previews inside chat apps often block internet access.</b>':'<br>All live services reachable.');
+}
+
+/* ---------- inputs ---------- */
+popDist();
+$('dist').onchange=e=>{
+ const d=DIS[e.target.value];$('upz').length=1;CUR_D=null;if(!d)return;
+ CUR_D=d;RU.filter(u=>u.d===d.id).forEach(u=>$('upz').add(new Option(u.name,u.id)));
+ pick(d.lat,d.lng,d.n+' District',true);
+};
+$('upz').onchange=async e=>{
+ const u=RU.find(x=>x.id===e.target.value);if(!u||!CUR_D)return;
+ const p=await resolveUp(u,CUR_D);
+ if(p.approx)toast('Exact upazila point not found, using the district centre');
+ pick(p.lat,p.lng,u.name+' Upazila, '+CUR_D.n,true);
+};
+$('ups').onclick=showUp;
+$('ld').onchange=e=>e.target.checked?dlg.addTo(map):map.removeLayer(dlg);
+$('sb').onclick=async()=>{
+ const q=$('q').value.trim();if(!q)return;
+ try{
+  const o=await j(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=8&countryCode=BD&language=en`);
+  $('sr').innerHTML=(o.results||[]).map((r,i)=>`<button data-i="${i}">${esc(r.name)}${r.admin2?', '+esc(r.admin2):''}${r.admin1?', '+esc(r.admin1):''}</button>`).join('')||'<p class="hint">No match found in Bangladesh.</p>';
+  $('sr').querySelectorAll('button').forEach(b=>b.onclick=()=>{const r=o.results[b.dataset.i];$('sr').innerHTML='';pick(r.latitude,r.longitude,r.name,true)});
+ }catch(e){toast('Search failed: '+e.message)}
+};
+$('q').onkeydown=e=>{if(e.key==='Enter')$('sb').click()};
+$('loc').onclick=async()=>{const p=await locate();if(p)pick(p.lat,p.lng,'Your location',true)};
+map.on('click',e=>{const n=DIS.map(d=>[d,hv(e.latlng.lat,e.latlng.lng,d.lat,d.lng)]).sort((a,b)=>a[1]-b[1])[0][0].n;pick(e.latlng.lat,e.latlng.lng,'Tapped point near '+n,false)});
+$('act').onchange=render;$('win').onchange=render;$('area').onchange=()=>sel&&refresh();
+$('lw').onchange=()=>{if(!$('lw').checked)cx.clearRect(0,0,cv.width,cv.height)};
+loadWind().then(()=>{if(!window.NOMAP)requestAnimationFrame(frame)}).catch(()=>{});
+const tmSaved=localStorage.getItem('ocevia_tm_url')||'';if($('tmurl'))$('tmurl').value=tmSaved;$('tmopen').onclick=()=>{const u=$('tmurl').value.trim();try{const p=new URL(u);if(p.protocol!=='https:'&&p.protocol!=='http:')throw 0;localStorage.setItem('ocevia_tm_url',p.href);window.open(p.href,'_blank','noopener');}catch(e){toast('Enter a valid TourMate URL first')}};
+diag();
+loadAdmin().then(ok=>{popDist();districtLive().catch(()=>{});$('dg2').textContent=ok?RD.length+' districts and '+RU.length+' upazilas loaded.':'Upazila list could not load. Use the search box to find any upazila by name.'});
+pick(21.4272,92.0058,"Cox's Bazar Beach",false);
+</script></body></html>
