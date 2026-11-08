@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: ocevia
+    runtime: node
+    buildCommand: "npm install"
+    startCommand: "node tourmate/tourmate-server.js"
+    healthCheckPath: /health
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false
