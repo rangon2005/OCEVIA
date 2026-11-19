@@ -1,0 +1,13 @@
+{
+  "name": "ocevia",
+  "version": "2.1.0",
+  "private": true,
+  "description": "Ocevia 7-day travel weather and integrated offline-capable TourMate",
+  "scripts": {
+    "start": "node tourmate/tourmate-server.js",
+    "test:tourmate": "node tests/tourmate-smoke.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
